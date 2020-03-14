@@ -312,8 +312,6 @@ class SafariBooks:
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
     }
 
-    COOKIE_FLOAT_MAX_AGE_PATTERN = re.compile(r'(max-age=\d*\.\d*)', re.IGNORECASE)
-
     def __init__(self, args):
         self.args = args
         self.display = Display("info_%s.log" % escape(args.bookid))
@@ -421,9 +419,8 @@ class SafariBooks:
 
     def handle_cookie_update(self, set_cookie_headers):
         for morsel in set_cookie_headers:
-            # Handle Float 'max-age' Cookie
-            if self.COOKIE_FLOAT_MAX_AGE_PATTERN.search(morsel):
-                cookie_key, cookie_value = morsel.split(";")[0].split("=")
+            for cookie_pair in morsel.split(';'):
+                cookie_key, cookie_value = cookie_pair.split('=')
                 self.session.cookies.set(cookie_key, cookie_value)
 
     def requests_provider(self, url, is_post=False, data=None, perform_redirect=True, **kwargs):
