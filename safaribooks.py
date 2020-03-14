@@ -343,6 +343,7 @@ class SafariBooks:
         # self.check_login()
 
         self.book_id = args.bookid
+        self.epub_name = os.path.join(self.BOOK_PATH, self.book_id) + ".epub"
         self.api_url = self.API_TEMPLATE.format(self.book_id)
 
         self.display.info("Retrieving book info...")
@@ -407,7 +408,7 @@ class SafariBooks:
         if not args.no_cookies:
             self.save_cookies()
 
-        self.display.done(os.path.join(self.BOOK_PATH, self.book_id + ".epub"))
+        self.display.done(self.epub_name)
         self.display.unregister()
 
         if not self.display.in_error and not args.log:
@@ -1024,8 +1025,11 @@ class SafariBooks:
         if os.path.isfile(zip_file + ".zip"):
             os.remove(zip_file + ".zip")
 
+        if os.path.isfile(self.epub_name):
+            os.remove(self.epub_name)
+
         shutil.make_archive(zip_file, 'zip', self.BOOK_PATH)
-        os.rename(zip_file + ".zip", os.path.join(self.BOOK_PATH, self.book_id) + ".epub")
+        os.rename(zip_file + ".zip", self.epub_name)
 
 
 # MAIN
