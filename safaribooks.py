@@ -356,9 +356,6 @@ class SafariBooks:
 
         self.chapters_queue = self.book_chapters[:]
 
-        if len(self.book_chapters) > sys.getrecursionlimit():
-            sys.setrecursionlimit(len(self.book_chapters))
-
         self.book_title = self.book_info["title"]
         self.base_url = self.book_info["web_url"]
 
@@ -580,7 +577,7 @@ class SafariBooks:
         return chapters
 
     def sleep(self):
-        time.sleep(0.5)
+        time.sleep(2)
 
     def get_default_cover(self):
         response = self.requests_provider(self.book_info["cover"], stream=True)
