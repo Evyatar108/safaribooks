@@ -411,7 +411,7 @@ class SafariBooks:
         if not args.no_cookies:
             self.save_cookies()
 
-        self.display.done(os.path.join(self.BOOK_PATH, self.book_title + ".epub"))
+        self.display.done(os.path.join(self.BOOK_PATH, self.book_id + ".epub"))
         self.display.unregister()
 
         if not self.display.in_error and not args.log:
@@ -575,7 +575,11 @@ class SafariBooks:
             chapters += chapters_batch
             page += 1
             has_next_chapter = bool(response["next"])
+            self.sleep()
         return chapters
+
+    def sleep(self):
+        time.sleep(0.5)
 
     def get_default_cover(self):
         response = self.requests_provider(self.book_info["cover"], stream=True)
@@ -608,6 +612,8 @@ class SafariBooks:
                 "Crawler: error trying to parse this page: %s (%s)\n    From: %s" %
                 (self.filename, self.chapter_title, url)
             )
+
+        self.sleep()
 
         return root
 
@@ -656,6 +662,8 @@ class SafariBooks:
                             "contains(lower-case(@name), 'cover') or contains(lower-case(@src), 'cover')]//img")
         if len(a):
             return a[0]
+
+        self.sleep()
 
         return None
 
@@ -830,6 +838,7 @@ class SafariBooks:
 
             else:
                 self.save_page_html(self.parse_html(self.get_html(next_chapter["web_url"]), first_page))
+                self.sleep()
 
             self.display.state(len_books, len_books - len(self.chapters_queue))
 
@@ -851,6 +860,7 @@ class SafariBooks:
 
             with open(css_file, 'wb') as s:
                 s.write(response.content)
+            self.sleep()
 
         self.css_done_queue.put(1)
         self.display.state(len(self.css), self.css_done_queue.qsize())
@@ -875,6 +885,7 @@ class SafariBooks:
             with open(image_path, 'wb') as img:
                 for chunk in response.iter_content(1024):
                     img.write(chunk)
+            self.sleep()
 
         self.images_done_queue.put(1)
         self.display.state(len(self.images), self.images_done_queue.qsize())
@@ -1040,7 +1051,7 @@ class SafariBooks:
             os.remove(zip_file + ".zip")
 
         shutil.make_archive(zip_file, 'zip', self.BOOK_PATH)
-        os.rename(zip_file + ".zip", os.path.join(self.BOOK_PATH, self.book_title) + ".epub")
+        os.rename(zip_file + ".zip", os.path.join(self.BOOK_PATH, self.book_id) + ".epub")
 
 
 # MAIN
