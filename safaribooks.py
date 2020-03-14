@@ -549,30 +549,33 @@ class SafariBooks:
         return response
 
     def get_book_chapters(self, page=1):
-        response = self.requests_provider(urljoin(self.api_url, "chapter/?page=%s" % page))
-        if response == 0:
-            self.display.exit("API: unable to retrieve book chapters.")
+        chapters = []
+        page = 1
+        has_next_chapter = True
+        while has_next_chapter:
+            response = self.requests_provider(urljoin(self.api_url, "chapter/?page=%s" % page))
+            if response == 0:
+                self.display.exit("API: unable to retrieve book chapters.")
 
-        response = response.json()
+            response = response.json()
 
-        if not isinstance(response, dict) or len(response.keys()) == 1:
-            self.display.exit(self.display.api_error(response))
+            if not isinstance(response, dict) or len(response.keys()) == 1:
+                self.display.exit(self.display.api_error(response))
 
-        if "results" not in response or not len(response["results"]):
-            self.display.exit("API: unable to retrieve book chapters.")
+            if "results" not in response or not len(response["results"]):
+                self.display.exit("API: unable to retrieve book chapters.")
 
-        if response["count"] > sys.getrecursionlimit():
-            sys.setrecursionlimit(response["count"])
+            response["results"] = [chapter for chapter in response["results"] if chapter['filename'] not in chapters_to_skip]
 
-        response["results"] = [c for c in response["results"] if c['filename'] not in chapters_to_skip]
+            cover_and_title_chapters = [chapter for chapter in response["results"] if "cover" in chapter["filename"] or "cover" in chapter["title"]]
+            chapters_batch = cover_and_title_chapters[:]
 
-        result = []
-        result.extend([c for c in response["results"] if "cover" in c["filename"] or "cover" in c["title"]])
-        for c in result:
-            del response["results"][response["results"].index(c)]
+            chapters_batch += [chapter for chapter in response['results'] if chapter not in cover_and_title_chapters]
 
-        result += response["results"]
-        return result + (self.get_book_chapters(page + 1) if response["next"] else [])
+            chapters += chapters_batch
+            page += 1
+            has_next_chapter = bool(response["next"])
+        return chapters
 
     def get_default_cover(self):
         response = self.requests_provider(self.book_info["cover"], stream=True)
