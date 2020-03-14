@@ -329,7 +329,7 @@ class SafariBooks:
                 self.display.exit("Login: unable to find cookies file.\n"
                                   "    Please use the `--cred` or `--login` options to perform the login.")
 
-            cookies_str = Path(COOKIES_FILE).read_text(encoding='utf-8'.strip()
+            cookies_str = Path(COOKIES_FILE).read_text(encoding='utf-8').strip()
 
             cookies = cookies_str.split(';')
             cookies_dir = {key: value for key, value in (cookie_pair.split('=') for cookie_pair in cookies)}
@@ -847,11 +847,7 @@ class SafariBooks:
         css_file = os.path.join(self.css_path, "Style{0:0>2}.css".format(self.css.index(url)))
         if os.path.isfile(css_file):
             if not self.display.css_ad_info.value and url not in self.css[:self.css.index(url)]:
-                self.display.info(("File `%s` already exists.\n"
-                                   "    If you want to download again all the CSSs,\n"
-                                   "    please delete the output directory '" + self.BOOK_PATH + "'"
-                                   " and restart the program.") %
-                                  css_file)
+                self.display.info(f"File `{css_file}` already exists.")
                 self.display.css_ad_info.value = 1
 
         else:
@@ -871,11 +867,7 @@ class SafariBooks:
         image_path = os.path.join(self.images_path, image_name)
         if os.path.isfile(image_path):
             if not self.display.images_ad_info.value and url not in self.images[:self.images.index(url)]:
-                self.display.info(("File `%s` already exists.\n"
-                                   "    If you want to download again all the images,\n"
-                                   "    please delete the output directory '" + self.BOOK_PATH + "'"
-                                   " and restart the program.") %
-                                  image_name)
+                self.display.info(f"File `{image_name}` already exists.")
                 self.display.images_ad_info.value = 1
 
         else:
@@ -917,10 +909,7 @@ class SafariBooks:
 
     def collect_images(self):
         if self.display.book_ad_info == 2:
-            self.display.info("Some of the book contents were already downloaded.\n"
-                              "    If you want to be sure that all the images will be downloaded,\n"
-                              "    please delete the output direcotry '" + self.BOOK_PATH +
-                              "' and restart the program.")
+            self.display.info("Some of the book contents were already downloaded.")
 
         self.display.state_status.value = -1
 
