@@ -158,7 +158,7 @@ class Display:
     def parse_description(self, desc):
         if not desc:
             return "n/d"
-        
+
         try:
             return html.fromstring(desc).text_content()
 
@@ -416,7 +416,7 @@ class SafariBooks:
             os.remove(self.display.log_file)
 
     def save_cookies(self):
-        cookies_file_content = ";".join(("=".join(key, value) for key, value in self.session.cookies.get_dict()))
+        cookies_file_content = ";".join(("=".join((key, value)) for key, value in self.session.cookies.get_dict().items()))
         Path(COOKIES_FILE).write_text(cookies_file_content)
 
     def handle_cookie_update(self, set_cookie_headers):
