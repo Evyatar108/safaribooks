@@ -823,17 +823,7 @@ class SafariBooks:
             if os.path.isfile(file_path):
                 if not self.display.book_ad_info and \
                         next_chapter not in self.book_chapters[:self.book_chapters.index(next_chapter)]:
-                    self.display.info(
-                        ("File `%s` already exists.\n"
-                         "    If you want to download again all the book%s,\n"
-                         "    please delete the output directory '" + self.BOOK_PATH + "' and restart the program.")
-                        %
-                        (
-                            self.filename.replace(".html", ".xhtml"),
-                            " (especially because you selected the `--no-kindle` option)"
-                            if self.args.no_kindle else ""
-                        )
-                    )
+                    self.display.info(f"File `{self.filename}` already exists.\n")
                     self.display.book_ad_info = 2
                 html_as_string = Path(file_path).read_text(encoding='utf-8')
                 self.parse_html(html.fromstring(html_as_string, base_url=SAFARI_BASE_URL))
@@ -908,9 +898,6 @@ class SafariBooks:
             self._start_multiprocessing(self._thread_download_css, self.css)
 
     def collect_images(self):
-        if self.display.book_ad_info == 2:
-            self.display.info("Some of the book contents were already downloaded.")
-
         self.display.state_status.value = -1
 
         if "win" in sys.platform:
