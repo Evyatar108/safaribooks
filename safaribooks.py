@@ -8,6 +8,8 @@ import shutil
 import getpass
 import logging
 import argparse
+from pathlib import Path
+
 import requests
 import traceback
 from html import escape
@@ -16,9 +18,10 @@ from lxml import html, etree
 from multiprocessing import Process, Queue, Value
 from urllib.parse import urljoin, urlparse, parse_qs, quote_plus
 
+from requests.cookies import RequestsCookieJar
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-COOKIES_FILE = os.path.join(PATH, "cookies.json")
+COOKIES_FILE = os.path.join(PATH, "cookies.csv")
 
 ORLY_BASE_HOST = "oreilly.com"  # PLEASE INSERT URL HERE
 
@@ -295,13 +298,15 @@ class SafariBooks:
               "</ncx>"
 
     HEADERS = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "accept-encoding": "gzip, deflate",
+        "authority":"learning.oreilly.com",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language":"en-US,en;q=0.9,he-IL;q=0.8,he;q=0.7",
+        "cache-control": "max-age=0",
         "origin": SAFARI_BASE_URL,
         "referer": LOGIN_ENTRY_URL,
         "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/60.0.3112.113 Safari/537.36"
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
     }
 
     COOKIE_FLOAT_MAX_AGE_PATTERN = re.compile(r'(max-age=\d*\.\d*)', re.IGNORECASE)
@@ -321,13 +326,18 @@ class SafariBooks:
                 self.display.exit("Login: unable to find cookies file.\n"
                                   "    Please use the `--cred` or `--login` options to perform the login.")
 
-            self.session.cookies.update(json.load(open(COOKIES_FILE)))
+            cookies_str = Path(COOKIES_FILE).read_text().strip()
+
+            cookies = cookies_str.split(';')
+            cookies_dir = {key: value for key, value in (cookie_pair.split('=') for cookie_pair in cookies)}
+
+            self.session.cookies.update(cookies_dir)
 
         else:
             self.display.info("Logging into Safari Books Online...", state=True)
             self.do_login(*args.cred)
             if not args.no_cookies:
-                json.dump(self.session.cookies.get_dict(), open(COOKIES_FILE, 'w'))
+                self.save_cookies()
 
         self.check_login()
 
@@ -397,13 +407,17 @@ class SafariBooks:
         self.create_epub()
 
         if not args.no_cookies:
-            json.dump(self.session.cookies.get_dict(), open(COOKIES_FILE, "w"))
+            self.save_cookies()
 
         self.display.done(os.path.join(self.BOOK_PATH, self.book_id + ".epub"))
         self.display.unregister()
 
         if not self.display.in_error and not args.log:
             os.remove(self.display.log_file)
+
+    def save_cookies(self):
+        cookies_file_content = ";".join(("=".join(key, value) for key, value in self.session.cookies.get_dict()))
+        Path(COOKIES_FILE).write_text(cookies_file_content)
 
     def handle_cookie_update(self, set_cookie_headers):
         for morsel in set_cookie_headers:
