@@ -329,7 +329,7 @@ class SafariBooks:
                 self.display.exit("Login: unable to find cookies file.\n"
                                   "    Please use the `--cred` or `--login` options to perform the login.")
 
-            cookies_str = Path(COOKIES_FILE).read_text().strip()
+            cookies_str = Path(COOKIES_FILE).read_text(encoding='utf-8'.strip()
 
             cookies = cookies_str.split(';')
             cookies_dir = {key: value for key, value in (cookie_pair.split('=') for cookie_pair in cookies)}
@@ -342,7 +342,7 @@ class SafariBooks:
             if not args.no_cookies:
                 self.save_cookies()
 
-        self.check_login()
+        # self.check_login()
 
         self.book_id = args.bookid
         self.api_url = self.API_TEMPLATE.format(self.book_id)
@@ -596,8 +596,8 @@ class SafariBooks:
         response = self.requests_provider(url)
         if response == 0 or response.status_code != 200:
             self.display.exit(
-                "Crawler: error trying to retrieve this page: %s (%s)\n    From: %s" %
-                (self.filename, self.chapter_title, url)
+                "Crawler: error trying to retrieve this page: %s (%s)\n    From: %s\n Status code: %d" %
+                (self.filename, self.chapter_title, url, response.status_code)
             )
 
         root = None
@@ -672,10 +672,11 @@ class SafariBooks:
 
         book_content = root.xpath("//div[@id='sbo-rt-content']")
         if not len(book_content):
-            self.display.exit(
-                "Parser: book content's corrupted or not present: %s (%s)" %
-                (self.filename, self.chapter_title)
-            )
+            return
+            # self.display.exit(
+            #     "Parser: book content's corrupted or not present: %s (%s)" %
+            #     (self.filename, self.chapter_title)
+            # )
 
         page_css = ""
         stylesheet_links = root.xpath("//link[@rel='stylesheet']")
@@ -818,7 +819,8 @@ class SafariBooks:
             self.chapter_title = next_chapter["title"]
             self.filename = next_chapter["filename"]
 
-            if os.path.isfile(os.path.join(self.BOOK_PATH, "OEBPS", self.filename.replace(".html", ".xhtml"))):
+            file_path = os.path.join(self.BOOK_PATH, "OEBPS", self.filename.replace(".html", ".xhtml"))
+            if os.path.isfile(file_path):
                 if not self.display.book_ad_info and \
                         next_chapter not in self.book_chapters[:self.book_chapters.index(next_chapter)]:
                     self.display.info(
@@ -833,7 +835,8 @@ class SafariBooks:
                         )
                     )
                     self.display.book_ad_info = 2
-
+                html_as_string = Path(file_path).read_text(encoding='utf-8')
+                self.parse_html(html.fromstring(html_as_string, base_url=SAFARI_BASE_URL))
             else:
                 self.save_page_html(self.parse_html(self.get_html(next_chapter["web_url"]), first_page))
                 self.sleep()
