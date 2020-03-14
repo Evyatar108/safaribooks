@@ -33,6 +33,8 @@ SAFARI_BASE_URL = "https://" + SAFARI_BASE_HOST
 API_ORIGIN_URL = "https://" + API_ORIGIN_HOST
 PROFILE_URL = SAFARI_BASE_URL + "/profile/"
 
+chapters_to_skip = ['nav.xhtml']
+
 
 class Display:
     BASE_FORMAT = logging.Formatter(
@@ -409,7 +411,7 @@ class SafariBooks:
         if not args.no_cookies:
             self.save_cookies()
 
-        self.display.done(os.path.join(self.BOOK_PATH, self.book_id + ".epub"))
+        self.display.done(os.path.join(self.BOOK_PATH, self.book_title + ".epub"))
         self.display.unregister()
 
         if not self.display.in_error and not args.log:
@@ -561,6 +563,8 @@ class SafariBooks:
 
         if response["count"] > sys.getrecursionlimit():
             sys.setrecursionlimit(response["count"])
+
+        response["results"] = [c for c in response["results"] if c['filename'] not in chapters_to_skip]
 
         result = []
         result.extend([c for c in response["results"] if "cover" in c["filename"] or "cover" in c["title"]])
@@ -1033,7 +1037,7 @@ class SafariBooks:
             os.remove(zip_file + ".zip")
 
         shutil.make_archive(zip_file, 'zip', self.BOOK_PATH)
-        os.rename(zip_file + ".zip", os.path.join(self.BOOK_PATH, self.book_id) + ".epub")
+        os.rename(zip_file + ".zip", os.path.join(self.BOOK_PATH, self.book_title) + ".epub")
 
 
 # MAIN
